@@ -1,11 +1,15 @@
 package com.jenkins.saas.entity;
 
+import com.jenkins.saas.config.TenantContext;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.validator.constraints.UUID;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -22,11 +26,21 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 
+@FilterDef(
+        name = "tenantFilter",
+        parameters = @ParamDef(name = "tenantId", type = String.class),
+        defaultCondition = "tenant_id = :tenantId"
+)
+@Filter(name = "tenantFilter")
+
 public class AbstractEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private String id;
+
+    @Column(name = "tenant_id", nullable = false)
+    private String tenantId;
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -49,6 +63,10 @@ public class AbstractEntity {
         }
         if(this.createdBy == null){
             this.createdBy = "SYSTEM";
+        }
+
+        if(this.tenantId == null){
+            this.tenantId = TenantContext.getCurrentTenant();
         }
 
 

@@ -10,6 +10,7 @@ import com.jenkins.saas.requests.StockMvmtRequest;
 import com.jenkins.saas.responses.StockMvmtResponse;
 import com.jenkins.saas.service.StockMvtService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class StockServiceImpl implements StockMvtService {
 
     final StockMvtRepository stockMvtRepository;
