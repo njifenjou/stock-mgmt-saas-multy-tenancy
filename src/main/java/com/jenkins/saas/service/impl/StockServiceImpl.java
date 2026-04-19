@@ -3,6 +3,7 @@ package com.jenkins.saas.service.impl;
 import com.jenkins.saas.common.PageResponse;
 import com.jenkins.saas.entity.Product;
 import com.jenkins.saas.entity.StockMvt;
+import com.jenkins.saas.exceptions.DuplicateResourceException;
 import com.jenkins.saas.mappers.StockMvtMapper;
 import com.jenkins.saas.repositories.ProductRepository;
 import com.jenkins.saas.repositories.StockMvtRepository;
@@ -83,7 +84,7 @@ public class StockServiceImpl implements StockMvtService {
     private void CheckProductExistById(final String productId) {
         final Optional<Product> product = this.productRepository.findById(productId);
         log.debug("product does not exist");
-        throw new EntityNotFoundException("product does not exist");
+        throw new DuplicateResourceException("product does not exist");
     }
 
 }

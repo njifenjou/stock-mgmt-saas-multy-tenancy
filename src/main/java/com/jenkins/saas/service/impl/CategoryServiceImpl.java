@@ -2,6 +2,7 @@ package com.jenkins.saas.service.impl;
 
 import com.jenkins.saas.common.PageResponse;
 import com.jenkins.saas.entity.Category;
+import com.jenkins.saas.exceptions.DuplicateResourceException;
 import com.jenkins.saas.mappers.CategoryMapper;
 import com.jenkins.saas.repositories.CategoryRepository;
 import com.jenkins.saas.requests.CategoryRequest;
@@ -80,7 +81,7 @@ public class CategoryServiceImpl implements CategoryService {
         final Optional<Category> category = this.categoryRepository.findByNameIgnoreCase(categoryName);
         if (category.isPresent()) {
             log.debug("Category already exists.");
-            throw new RuntimeException("Category already exists");
+            throw new DuplicateResourceException("Category already exists");
         }
 
     }

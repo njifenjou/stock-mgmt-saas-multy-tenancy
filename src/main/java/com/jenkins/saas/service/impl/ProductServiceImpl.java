@@ -3,6 +3,7 @@ package com.jenkins.saas.service.impl;
 import com.jenkins.saas.common.PageResponse;
 import com.jenkins.saas.entity.Category;
 import com.jenkins.saas.entity.Product;
+import com.jenkins.saas.exceptions.DuplicateResourceException;
 import com.jenkins.saas.mappers.ProductMapper;
 import com.jenkins.saas.repositories.CategoryRepository;
 import com.jenkins.saas.repositories.ProductRepository;
@@ -83,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
         final Optional<Product> product = productRepository.findByReferenceIgnoreCase(reference);
         if (product.isPresent()) {
             log.debug("Product already exists");
-            throw new RuntimeException("Product already exists");
+            throw new DuplicateResourceException("Product already exists");
         }
 
 
