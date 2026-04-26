@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -32,13 +34,12 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(value = EntityNotFoundException.class)
+    @ExceptionHandler(value = {EntityNotFoundException.class, UsernameNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleException(
             final EntityNotFoundException ex,
             final HttpServletRequest request) {
         log.error("Entity Not Found", ex);
         final ErrorResponse errorResponse = ErrorResponse.builder()
-                .code("NOT FOUND")
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
                 .build();
@@ -73,10 +74,29 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+@ExceptionHandler(value = BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleException(
+            final BadCredentialsException ex,
+            final HttpServletRequest request) {
+        final ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("Login and / or password are incorrect")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(errorResponse);
+    }
+
+
 
     private HttpStatus getHttpStatus(BusinessException ex) {
         if (ex instanceof DuplicateResourceException) {
             return HttpStatus.CONFLICT;
+        }else if (ex instanceof UnauthorizedException) {
+            return HttpStatus.UNAUTHORIZED;
+        }
+        else if (ex instanceof TenantProvisioningException){
+            return HttpStatus.INTERNAL_SERVER_ERROR;
         }
         return HttpStatus.BAD_REQUEST;
     }
