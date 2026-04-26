@@ -8,7 +8,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.security.KeyFactory;
@@ -19,29 +21,36 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Date;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 @Slf4j
+@Service
 public class JwtService {
 
     private final JwtProperties jwtProperties;
-    private  PrivateKey privateKey;
-    private PublicKey publicKey;
+    private  final PrivateKey privateKey;
+    private final PublicKey publicKey;
 
-    @PostConstruct
-    public void init() {
-        try {
-            this.privateKey = loadPrivateKey(this.jwtProperties.getPrivateKeyPath());
-            this.publicKey = loadPublicKey(this.jwtProperties.getPublicKeyPath());
-            log.info("private && public key loaded successfully");
+//    @PostConstruct
+//    public void init() {
+//        try {
+//            this.privateKey = loadPrivateKey(this.jwtProperties.getPrivateKeyPath());
+//            this.publicKey = loadPublicKey(this.jwtProperties.getPublicKeyPath());
+//            log.info("private && public key loaded successfully");
+//
+//        } catch (final Exception e) {
+//            log.error("Failed to load private key", e);
+//            throw new RuntimeException("Error loading private key", e);
+//
+//        }
+//    }
 
-        } catch (final Exception e) {
-            log.error("Failed to load private key", e);
-            throw new RuntimeException("Error loading private key", e);
-
-        }
+    @Autowired
+    public JwtService(JwtProperties jwtProperties) throws Exception {
+        this.jwtProperties = jwtProperties;
+        this.publicKey = loadPublicKey(jwtProperties.getPublicKeyPath());
+        this.privateKey = loadPrivateKey(jwtProperties.getPrivateKeyPath());
     }
-
 
     public String generateAccessToken(
             @NonNull
@@ -52,6 +61,17 @@ public class JwtService {
         final Date now = new Date();
         final Date expiration = new Date(now.getTime() + this.jwtProperties.getAccessTokenExpiration());
 
+        SignatureAlgorithm algo = SignatureAlgorithm.forName(jwtProperties.getSigingAlgorithm());
+
+//        return Jwts.builder()
+//                .subject(userId)
+//                .claim("tenant_id", tenantId)
+//                .claim("role", role)
+//                .issuedAt(now)
+//                .expiration(expiration)
+//                .issuer("stock-saas-app")
+//                .signWith(this.privateKey, SignatureAlgorithm.RS256)
+//                .compact();
         return Jwts.builder()
                 .subject(userId)
                 .claim("tenant_id", tenantId)
@@ -59,7 +79,7 @@ public class JwtService {
                 .issuedAt(now)
                 .expiration(expiration)
                 .issuer("stock-saas-app")
-                .signWith(this.privateKey, SignatureAlgorithm.RS256)
+                .signWith(privateKey, algo)
                 .compact();
     }
 
@@ -104,15 +124,15 @@ public class JwtService {
 
 
     private Claims getClaimsFromToken(final String token) {
-        return Jwts.parser()
-                .setSigningKey(this.publicKey)
-                .build()
-                .parseClaimsJws(token);
-//  return Jwts.parser()
-//                .verifyWith(this.publicKey)
+//        return Jwts.parser()
+//                .setSigningKey(this.publicKey)
 //                .build()
-//                .parseSignedClaims(token)
-//                .getPayload();
+//                .parseClaimsJws(token);
+          return Jwts.parser()
+                        .verifyWith(this.publicKey)
+                        .build()
+                        .parseSignedClaims(token)
+                        .getPayload();
 
     }
 
